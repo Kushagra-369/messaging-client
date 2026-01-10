@@ -4,10 +4,167 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>messaging-client</title>
+    
+    <!-- Primary Meta Tags -->
+    <title>ChatApp | Modern Real-time Messaging</title>
+    <meta name="title" content="ChatApp | Modern Real-time Messaging">
+    <meta name="description" content="Connect instantly with ChatApp - a modern, real-time messaging platform with end-to-end encryption and seamless collaboration features.">
+    <meta name="keywords" content="chat, messaging, real-time, communication, collaboration, secure chat">
+    <meta name="author" content="ChatApp Team">
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://chatapp.example.com/">
+    <meta property="og:title" content="ChatApp | Modern Real-time Messaging">
+    <meta property="og:description" content="Connect instantly with ChatApp - a modern, real-time messaging platform with end-to-end encryption and seamless collaboration features.">
+    <meta property="og:image" content="/social-preview.png">
+    
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://chatapp.example.com/">
+    <meta property="twitter:title" content="ChatApp | Modern Real-time Messaging">
+    <meta property="twitter:description" content="Connect instantly with ChatApp - a modern, real-time messaging platform with end-to-end encryption and seamless collaboration features.">
+    <meta property="twitter:image" content="/social-preview.png">
+    
+    <!-- Theme Color -->
+    <meta name="theme-color" content="#3b82f6" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#1e40af" media="(prefers-color-scheme: dark)">
+    
+    <!-- Apple Touch Icons -->
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+    
+    <!-- Manifest for PWA -->
+    <link rel="manifest" href="/site.webmanifest" crossorigin="use-credentials">
+    
+    <!-- Favicon Package (multiple sizes) -->
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+    
+    <!-- Preconnect to important origins -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- SEO Structured Data -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "ChatApp",
+      "description": "Modern real-time messaging platform",
+      "url": "https://chatapp.example.com",
+      "applicationCategory": "CommunicationApplication",
+      "operatingSystem": "Web",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      },
+      "featureList": [
+        "Real-time messaging",
+        "End-to-end encryption",
+        "File sharing",
+        "Voice messages",
+        "Group chats"
+      ]
+    }
+    </script>
+    
+    <!-- Mobile App Capabilities -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="ChatApp">
+    <meta name="format-detection" content="telephone=no">
+    <meta name="mobile-web-app-capable" content="yes">
+    
+    <!-- Security Headers (via meta tags where possible) -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com;">
+    
+    <style>
+      /* Loading animation */
+      #root {
+        min-height: 100vh;
+      }
+      
+      /* Smooth loading */
+      body {
+        margin: 0;
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        transition: background 0.3s ease;
+      }
+      
+      /* Loading spinner */
+      .app-loading {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+        color: white;
+      }
+      
+      .spinner {
+        width: 50px;
+        height: 50px;
+        border: 3px solid rgba(255,255,255,.3);
+        border-radius: 50%;
+        border-top-color: white;
+        animation: spin 1s ease-in-out infinite;
+        margin-bottom: 20px;
+      }
+      
+      @keyframes spin {
+        to { transform: rotate(360deg); }
+      }
+      
+      /* Dark mode preference */
+      @media (prefers-color-scheme: dark) {
+        body {
+          background: linear-gradient(135deg, #1a202c 0%, #2d3748 100%);
+        }
+      }
+    </style>
   </head>
   <body>
+    <!-- Loading screen (removed when React mounts) -->
+    <div id="loading" class="app-loading">
+      <div class="spinner"></div>
+      <h2>Loading ChatApp...</h2>
+    </div>
+    
+    <!-- React root -->
     <div id="root"></div>
+    
+    <!-- Remove loading screen when app loads -->
+    <script>
+      // Remove loading screen when app mounts
+      document.addEventListener('DOMContentLoaded', () => {
+        const root = document.getElementById('root');
+        const loading = document.getElementById('loading');
+        
+        // Check if React has mounted
+        const checkMounted = setInterval(() => {
+          if (root.children.length > 0) {
+            clearInterval(checkMounted);
+            // Add fade-out animation
+            loading.style.opacity = '0';
+            loading.style.transition = 'opacity 0.3s ease';
+            setTimeout(() => {
+              loading.style.display = 'none';
+            }, 300);
+          }
+        }, 100);
+      });
+    </script>
+    
     <script type="module" src="/src/main.tsx"></script>
+    
+    <!-- Analytics (optional) -->
+    <script defer data-domain="chatapp.example.com" src="https://plausible.io/js/script.js"></script>
   </body>
 </html>
