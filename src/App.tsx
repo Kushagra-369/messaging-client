@@ -2,10 +2,11 @@ import { Routes, Route, Navigate } from "react-router-dom";
 import Navbar from "./Components/Navbar/Navbar";
 import Home from "./Components/Home/Home";
 import Signin from "./Components/Login/Signin";
-import { useState } from "react";
+import OTP from "./Components/Login/OTP";
+import Login from "./Components/Login/Login";
 
 export default function App() {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const isAuthenticated = Boolean(localStorage.getItem("access_token"));
 
   return (
     <div>
@@ -18,27 +19,20 @@ export default function App() {
         "
       />
 
-      {/* Show Navbar ONLY after login */}
+      {/* Navbar only after login */}
       {isAuthenticated && <Navbar />}
 
       <Routes>
-        {/* Default route */}
         <Route
           path="/"
           element={
-            isAuthenticated ? (
-              <Home />
-            ) : (
-              <Navigate to="/signin" replace />
-            )
+            isAuthenticated ? <Home /> : <Navigate to="/signin" replace />
           }
         />
 
-        {/* Signin */}
-        <Route
-          path="/signin"
-          element={<Signin onLogin={() => setIsAuthenticated(true)} />}
-        />
+        <Route path="/signin" element={<Signin />} />
+        <Route path="/verify-otp" element={<OTP />} />
+        <Route path="/login" element={<Login />} />
       </Routes>
     </div>
   );
