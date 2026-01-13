@@ -8,6 +8,7 @@ export default function Home() {
         flex flex-col items-center justify-center
         px-4
         transition-colors duration-300
+        bg-transparent
       "
     >
       {/* Hero Card */}
@@ -16,7 +17,6 @@ export default function Home() {
           w-full max-w-3xl
           rounded-2xl
           border
-          bg-white dark:bg-gray-900
           border-gray-200 dark:border-gray-700
           shadow-lg dark:shadow-gray-900/40
           p-6 md:p-10
@@ -87,7 +87,7 @@ export default function Home() {
         </div>
       </div>
 
-    
+
     </main>
   );
 }

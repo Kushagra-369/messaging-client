@@ -19,52 +19,61 @@ export default function Login() {
         }));
     };
 
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
+const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
 
-        const { email, password } = formData;
+  const { email, password } = formData;
 
-        if (!email || !password) {
-            alert("Email and password are required");
-            return;
-        }
+  if (!email || !password) {
+    alert("Email and password are required");
+    return;
+  }
 
-        try {
-            setLoading(true);
+  try {
+    setLoading(true);
 
-            const res = await fetch(`${APIURL}/user_login`, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({ email, password }),
-            });
+    const res = await fetch(`${APIURL}/user_login`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ email, password }),
+    });
 
-            let data;
-            try {
-                data = await res.json();
-            } catch {
-                throw new Error("Server did not return JSON");
-            }
+    const text = await res.text();
+    let data: any = {};
 
-            if (!res.ok) {
-                alert(data.message || "Login failed");
-                return;
-            }
+    try {
+      data = text ? JSON.parse(text) : {};
+    } catch {
+      throw new Error("Invalid server response");
+    }
 
-            // ✅ Save token
-            localStorage.setItem("access_token", data.token);
+    if (!res.ok) {
+      if (res.status === 403 && data.next === "VERIFY_OTP") {
+        alert("Account not verified. Please verify OTP.");
+        return;
+      }
 
-            // ✅ Redirect to home
-            navigate("/");
+      alert(data.message || "Login failed");
+      return;
+    }
 
-        } catch (error) {
-            console.error("Login error:", error);
-            alert("Something went wrong");
-        } finally {
-            setLoading(false);
-        }
-    };
+    // ✅ Save token
+    localStorage.setItem("access_token", data.token);
+
+    // ✅ FORCE re-evaluation of auth + redirect to home
+    window.location.replace("/");
+
+  } catch (error) {
+    console.error("Login error:", error);
+    alert("Something went wrong while logging in");
+  } finally {
+    setLoading(false);
+  }
+};
+
+
 
 
     return (
