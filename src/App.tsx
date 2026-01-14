@@ -5,6 +5,7 @@ import Home from "./Components/Home/Home";
 import Signin from "./Components/Login/Signin";
 import OTP from "./Components/Login/OTP";
 import Login from "./Components/Login/Login";
+import Profile from "./Components/User/Profile";
 import { APIURL } from "./GlobalAPIURL";
 
 export default function App() {
@@ -98,6 +99,13 @@ export default function App() {
           path="/verify-otp"
           element={
             isAuthenticated ? <Navigate to="/" replace /> : <OTP />
+          }
+        />
+        {/* 👤 PROFILE */}
+        <Route
+          path="/profile"
+          element={
+            isAuthenticated ? <Profile /> : <Navigate to="/signin" replace />
           }
         />
 

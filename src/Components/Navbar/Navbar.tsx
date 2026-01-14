@@ -1,10 +1,12 @@
 import { useState, useRef, useEffect } from "react";
 import { useTheme } from "../../Context/ThemeContext";
+import { useNavigate } from "react-router-dom";
 
 export default function Navbar() {
   const { isDark, toggleTheme } = useTheme();
   const [isProfileOpen, setIsProfileOpen] = useState<boolean>(false);
   const profileRef = useRef<HTMLDivElement>(null);
+  const navigate = useNavigate();
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -32,7 +34,9 @@ export default function Navbar() {
 
   const handleViewProfile = (): void => {
     // Add your view profile logic here
+    navigate("/profile");
     console.log("Viewing profile...");
+    
     setIsProfileOpen(false);
   };
 
