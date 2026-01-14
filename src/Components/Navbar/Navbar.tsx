@@ -1,7 +1,40 @@
+import { useState, useRef, useEffect } from "react";
 import { useTheme } from "../../Context/ThemeContext";
 
 export default function Navbar() {
   const { isDark, toggleTheme } = useTheme();
+  const [isProfileOpen, setIsProfileOpen] = useState<boolean>(false);
+  const profileRef = useRef<HTMLDivElement>(null);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (profileRef.current && !profileRef.current.contains(event.target as Node)) {
+        setIsProfileOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+  const handleProfileClick = (): void => {
+    setIsProfileOpen(!isProfileOpen);
+  };
+
+  const handleSignOut = (): void => {
+    // Add your sign out logic here
+    console.log("Signing out...");
+    setIsProfileOpen(false);
+  };
+
+  const handleViewProfile = (): void => {
+    // Add your view profile logic here
+    console.log("Viewing profile...");
+    setIsProfileOpen(false);
+  };
 
   return (
     <nav className={`${isDark ? 'dark' : ''} transition-colors duration-200`}>
@@ -140,31 +173,110 @@ export default function Navbar() {
             </span>
           </button>
 
-          {/* Profile */}
-          <div className="
-            flex items-center gap-2
-            pl-3 md:pl-4
-            border-l border-gray-200 dark:border-gray-700
-          ">
-            <div className="
-              p-2 rounded-full
-              bg-linear-to-r from-blue-500 to-purple-600
-              cursor-pointer
-              hover:scale-105
-              transition-transform duration-200
-              relative group
-            ">
-              <span className="text-white text-lg">👤</span>
-              <span className="
-                absolute -bottom-8 left-1/2 transform -translate-x-1/2
-                px-2 py-1 text-xs
-                bg-gray-800 dark:bg-gray-700 text-white
-                rounded opacity-0 group-hover:opacity-100
-                transition-opacity duration-200 whitespace-nowrap
+          {/* Profile Dropdown */}
+          <div className="relative" ref={profileRef}>
+            <button
+              onClick={handleProfileClick}
+              className="
+                flex items-center gap-2
+                pl-3 md:pl-4
+                border-l border-gray-200 dark:border-gray-700
+                hover:opacity-90
+                transition-opacity duration-200
+              "
+              aria-label="Profile menu"
+              aria-expanded={isProfileOpen}
+            >
+              <div className="
+                p-2 rounded-full
+                bg-linear-to-r from-blue-500 to-purple-600
+                cursor-pointer
+                hover:scale-105
+                transition-transform duration-200
+                relative
               ">
-                Profile
+                <span className="text-white text-lg">👤</span>
+              </div>
+              {/* Chevron icon */}
+              <span className={`
+                text-gray-500 dark:text-gray-400 text-xs
+                transition-transform duration-200
+                ${isProfileOpen ? 'rotate-180' : ''}
+              `}>
+                ▼
               </span>
-            </div>
+            </button>
+
+            {/* Dropdown Menu */}
+            {isProfileOpen && (
+              <div className="
+                absolute right-0 mt-2 w-48
+                rounded-lg shadow-lg
+                bg-white dark:bg-gray-800
+                border border-gray-200 dark:border-gray-700
+                overflow-hidden
+                z-50
+                animate-fadeIn
+              ">
+                {/* Dropdown Header (User Info) */}
+                <div className="
+                  px-4 py-3
+                  border-b border-gray-100 dark:border-gray-700
+                  bg-gray-50 dark:bg-gray-900
+                ">
+                  <p className="
+                    text-sm font-medium
+                    text-gray-900 dark:text-white
+                  ">
+                    John Doe
+                  </p>
+                  <p className="
+                    text-xs
+                    text-gray-500 dark:text-gray-400
+                    truncate
+                  ">
+                    john.doe@example.com
+                  </p>
+                </div>
+
+                {/* Dropdown Items */}
+                <div className="py-1">
+                  <button
+                    onClick={handleViewProfile}
+                    className="
+                      w-full
+                      flex items-center gap-3
+                      px-4 py-3
+                      text-sm
+                      text-gray-700 dark:text-gray-300
+                      hover:bg-gray-100 dark:hover:bg-gray-700
+                      transition-colors duration-150
+                      text-left
+                    "
+                  >
+                    <span className="text-gray-500 dark:text-gray-400">👤</span>
+                    <span>View Profile</span>
+                  </button>
+
+                  <button
+                    onClick={handleSignOut}
+                    className="
+                      w-full
+                      flex items-center gap-3
+                      px-4 py-3
+                      text-sm
+                      text-red-600 dark:text-red-400
+                      hover:bg-red-50 dark:hover:bg-red-900/20
+                      transition-colors duration-150
+                      text-left
+                    "
+                  >
+                    <span>🚪</span>
+                    <span>Sign Out</span>
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>
