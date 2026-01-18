@@ -2,14 +2,36 @@ import { useState, useRef, useEffect } from "react";
 import { useTheme } from "../../Context/ThemeContext";
 import { useNavigate } from "react-router-dom";
 import toast, { Toaster } from "react-hot-toast";
+import { APIURL } from "../../GlobalAPIURL"
+
+// Define user interface
+interface UserData {
+  id?: string;
+  _id?: string;
+  username?: string;
+  first_name?: string;
+  last_name?: string;
+  email?: string;
+  profileImg?: {
+    public_id: string;
+    secure_url: string;
+  };
+}
 
 export default function Navbar() {
   const { isDark, toggleTheme } = useTheme();
   const [isProfileOpen, setIsProfileOpen] = useState<boolean>(false);
   const [isSigningOut, setIsSigningOut] = useState<boolean>(false);
   const [showConfirmLogout, setShowConfirmLogout] = useState<boolean>(false);
+  const [userData, setUserData] = useState<UserData | null>(null);
+  const [, setIsLoadingUser] = useState<boolean>(true);
   const profileRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
+
+  // Fetch user data on component mount
+  useEffect(() => {
+    fetchUserData();
+  }, []);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -26,6 +48,62 @@ export default function Navbar() {
     };
   }, []);
 
+  const fetchUserData = async () => {
+    try {
+      const token = localStorage.getItem("access_token");
+      
+      if (!token) {
+        setIsLoadingUser(false);
+        return;
+      }
+
+      // First get user ID from auth_me
+      const authResponse = await fetch(`${APIURL}/auth_me`, {
+        method: "GET",
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!authResponse.ok) {
+        setIsLoadingUser(false);
+        return;
+      }
+
+      const authResult = await authResponse.json();
+      
+      if (authResult.success && authResult.user) {
+        const userId = authResult.user.id || authResult.user._id;
+        
+        // Then get full user data using get_user_by_id
+        const userResponse = await fetch(`${APIURL}/get_user_by_id/${userId}`, {
+          method: "GET",
+          headers: {
+            "Authorization": `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        });
+
+        if (userResponse.ok) {
+          const userResult = await userResponse.json();
+          if (userResult.success && userResult.user) {
+            setUserData(userResult.user);
+          } else if (userResult.success && userResult.data) {
+            setUserData(userResult.data);
+          }
+        } else {
+          // Fallback to auth_me data
+          setUserData(authResult.user);
+        }
+      }
+    } catch (error) {
+      console.error("Error fetching user data:", error);
+    } finally {
+      setIsLoadingUser(false);
+    }
+  };
+
   const handleProfileClick = (): void => {
     setIsProfileOpen(!isProfileOpen);
     setShowConfirmLogout(false);
@@ -40,7 +118,7 @@ export default function Navbar() {
     setIsSigningOut(true);
 
     try {
-      // Get token from localStorage - use the same key as login
+      // Get token from localStorage
       const token = localStorage.getItem("access_token");
 
       if (token) {
@@ -58,9 +136,9 @@ export default function Navbar() {
         }
       }
 
-      // Clear all client-side storage - include ALL keys you use
+      // Clear all client-side storage
       localStorage.removeItem("access_token");
-      localStorage.removeItem("token"); // Remove both just in case
+      localStorage.removeItem("token");
       localStorage.removeItem("user");
       localStorage.removeItem("theme");
       sessionStorage.clear();
@@ -86,10 +164,11 @@ export default function Navbar() {
       // Close dropdown and redirect after delay
       setIsProfileOpen(false);
       setShowConfirmLogout(false);
+      setUserData(null);
 
       // Force a complete page reload and redirect to login
       setTimeout(() => {
-        window.location.href = "/login";  // Use window.location.href for full reload
+        window.location.href = "/login";
       }, 1000);
 
     } catch (error) {
@@ -98,6 +177,7 @@ export default function Navbar() {
       // Force clear everything and redirect
       localStorage.clear();
       sessionStorage.clear();
+      setUserData(null);
 
       toast.error("Signed out with warnings", {
         duration: 3000,
@@ -152,6 +232,37 @@ export default function Navbar() {
 
   const cancelLogout = (): void => {
     setShowConfirmLogout(false);
+  };
+
+  // Format user name
+  const getUserName = () => {
+    if (!userData) return "Guest";
+    
+    if (userData.first_name && userData.last_name) {
+      return `${userData.first_name} ${userData.last_name}`;
+    } else if (userData.first_name) {
+      return userData.first_name;
+    } else if (userData.username) {
+      return userData.username;
+    }
+    return "User";
+  };
+
+  // Get user email
+  const getUserEmail = () => {
+    return userData?.email || "user@example.com";
+  };
+
+  // Get user initials for profile picture
+  const getUserInitials = () => {
+    if (!userData) return "G";
+    
+    if (userData.first_name) {
+      return userData.first_name.charAt(0).toUpperCase();
+    } else if (userData.username) {
+      return userData.username.charAt(0).toUpperCase();
+    }
+    return "G";
   };
 
   return (
@@ -331,7 +442,17 @@ export default function Navbar() {
                   transition-transform duration-200
                   relative
                 ">
-                  <span className="text-white text-lg">👤</span>
+                  {userData?.profileImg?.secure_url ? (
+                    <img 
+                      src={userData.profileImg.secure_url} 
+                      alt="Profile"
+                      className="w-8 h-8 rounded-full object-cover"
+                    />
+                  ) : (
+                    <span className="text-white text-lg">
+                      {getUserInitials()}
+                    </span>
+                  )}
                 </div>
                 {/* Chevron icon */}
                 <span className={`
@@ -363,15 +484,16 @@ export default function Navbar() {
                     <p className="
                       text-sm font-medium
                       text-gray-900 dark:text-white
+                      truncate
                     ">
-                      John Doe
+                      {getUserName()}
                     </p>
                     <p className="
                       text-xs
                       text-gray-500 dark:text-gray-400
                       truncate
                     ">
-                      john.doe@example.com
+                      {getUserEmail()}
                     </p>
                   </div>
 

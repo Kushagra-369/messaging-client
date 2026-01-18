@@ -16,7 +16,6 @@ export default function App() {
     const checkAuth = async () => {
       const token = localStorage.getItem("access_token");
 
-      // 🚪 No token → not logged in
       if (!token) {
         setIsAuthenticated(false);
         setCheckingAuth(false);
@@ -30,27 +29,29 @@ export default function App() {
           },
         });
 
-        if (!res.ok) {
-          // 🔥 Token invalid / user deleted / inactive
+        // 🔐 ONLY logout on real auth failure
+        if (res.status === 401 || res.status === 403) {
           localStorage.removeItem("access_token");
           setIsAuthenticated(false);
           setCheckingAuth(false);
           return;
         }
 
-        // ✅ Backend confirms user is valid
+        // ✅ Server responded → user still logged in
         setIsAuthenticated(true);
         setCheckingAuth(false);
 
-      } catch {
-        localStorage.removeItem("access_token");
-        setIsAuthenticated(false);
+      } catch (error) {
+        // 🚨 BACKEND DOWN ≠ LOGOUT
+        console.warn("Backend unreachable, keeping user logged in");
+        setIsAuthenticated(true);
         setCheckingAuth(false);
       }
     };
 
     checkAuth();
   }, []);
+
 
   // ⏳ Prevent route flicker
   if (checkingAuth) {
