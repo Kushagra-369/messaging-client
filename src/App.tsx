@@ -6,6 +6,7 @@ import Signin from "./Components/Login/Signin";
 import OTP from "./Components/Login/OTP";
 import Login from "./Components/Login/Login";
 import Profile from "./Components/User/Profile";
+import Chatting from "./Components/Chatting/Chatting";
 import { APIURL } from "./GlobalAPIURL";
 
 export default function App() {
@@ -29,7 +30,6 @@ export default function App() {
           },
         });
 
-        // 🔐 ONLY logout on real auth failure
         if (res.status === 401 || res.status === 403) {
           localStorage.removeItem("access_token");
           setIsAuthenticated(false);
@@ -37,12 +37,9 @@ export default function App() {
           return;
         }
 
-        // ✅ Server responded → user still logged in
         setIsAuthenticated(true);
         setCheckingAuth(false);
-
       } catch (error) {
-        // 🚨 BACKEND DOWN ≠ LOGOUT
         console.warn("Backend unreachable, keeping user logged in");
         setIsAuthenticated(true);
         setCheckingAuth(false);
@@ -51,7 +48,6 @@ export default function App() {
 
     checkAuth();
   }, []);
-
 
   // ⏳ Prevent route flicker
   if (checkingAuth) {
@@ -102,11 +98,20 @@ export default function App() {
             isAuthenticated ? <Navigate to="/" replace /> : <OTP />
           }
         />
+
         {/* 👤 PROFILE */}
         <Route
           path="/profile"
           element={
             isAuthenticated ? <Profile /> : <Navigate to="/signin" replace />
+          }
+        />
+
+        {/* 💬 CHAT (FIXED – PROTECTED) */}
+        <Route
+          path="/chat"
+          element={
+            isAuthenticated ? <Chatting /> : <Navigate to="/signin" replace />
           }
         />
 
