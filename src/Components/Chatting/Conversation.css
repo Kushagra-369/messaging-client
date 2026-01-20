@@ -362,51 +362,74 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
+  width: 100%;
 }
 
+/* Message Container - Controls positioning */
+.message-container {
+  display: flex;
+  width: 100%;
+  margin-bottom: 8px;
+}
+
+/* Sender (You) - Align to RIGHT */
+.message-container.sent {
+  justify-content: flex-end;
+}
+
+/* Receiver (Other user) - Align to LEFT */
+.message-container.received {
+  justify-content: flex-start;
+}
+
+/* Message Bubbles */
 .message-bubble {
   max-width: 70%;
-  margin-bottom: 4px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
   animation: fadeIn 0.3s ease-out;
 }
 
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
+/* SENT message bubble (You - Right side) */
+.sent-bubble {
+  align-items: flex-end;
 }
 
-.message-bubble.sent {
-  align-self: flex-end;
-}
-
-.message-bubble.received {
-  align-self: flex-start;
-}
-
-.message-content {
-  padding: 12px 16px;
-  border-radius: 18px;
-  position: relative;
-}
-
-.message-bubble.sent .message-content {
+.sent-bubble .message-content {
   background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
   color: white;
-  border-bottom-right-radius: 4px;
+  border-radius: 18px 4px 18px 18px;
+  box-shadow: 0 2px 8px rgba(76, 175, 80, 0.3);
 }
 
-.message-bubble.received .message-content {
+/* RECEIVED message bubble (Other user - Left side) */
+.received-bubble {
+  align-items: flex-start;
+}
+
+.received-bubble .message-content {
   background: white;
   color: #333;
-  border-bottom-left-radius: 4px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  border-radius: 4px 18px 18px 18px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+/* Message content styling */
+.message-content {
+  padding: 12px 16px;
+  position: relative;
+  min-width: 60px;
+  max-width: 100%;
+  word-wrap: break-word;
 }
 
 .message-content p {
   margin: 0 0 4px 0;
-  word-wrap: break-word;
   font-size: 15px;
   line-height: 1.4;
+  font-weight: 400;
 }
 
 .message-time {
@@ -415,10 +438,59 @@
   display: flex;
   align-items: center;
   gap: 4px;
+  font-weight: 300;
+}
+
+.sent-bubble .message-time {
+  color: rgba(255, 255, 255, 0.9);
+  justify-content: flex-end;
+}
+
+.received-bubble .message-time {
+  color: #666;
+  justify-content: flex-end;
 }
 
 .read-status {
   font-size: 12px;
+  margin-left: 4px;
+}
+
+/* Add tail indicators for chat bubbles */
+.sent-bubble .message-content::after {
+  content: '';
+  position: absolute;
+  right: -8px;
+  bottom: 0;
+  width: 0;
+  height: 0;
+  border-left: 8px solid #4CAF50;
+  border-right: 8px solid transparent;
+  border-bottom: 8px solid transparent;
+}
+
+.received-bubble .message-content::before {
+  content: '';
+  position: absolute;
+  left: -8px;
+  bottom: 0;
+  width: 0;
+  height: 0;
+  border-right: 8px solid white;
+  border-left: 8px solid transparent;
+  border-bottom: 8px solid transparent;
+}
+
+/* Add spacing between messages from different senders */
+.message-container.sent + .message-container.received,
+.message-container.received + .message-container.sent {
+  margin-top: 16px;
+}
+
+/* Add subtle margin between consecutive messages from same sender */
+.message-container.sent + .message-container.sent,
+.message-container.received + .message-container.received {
+  margin-top: 2px;
 }
 
 .no-chat-selected {
@@ -527,6 +599,12 @@
   animation: spin 1s linear infinite;
 }
 
+/* Animations */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
 /* Scrollbar Styling */
 .conversation-list::-webkit-scrollbar,
 .chat-messages::-webkit-scrollbar {
@@ -576,5 +654,45 @@
   
   .message-bubble {
     max-width: 85%;
+  }
+}
+
+/* Message typing indicator */
+.typing-indicator {
+  display: flex;
+  align-items: center;
+  padding: 12px 16px;
+  background: white;
+  border-radius: 18px 18px 18px 4px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  align-self: flex-start;
+  margin-left: 10px;
+}
+
+.typing-dot {
+  width: 8px;
+  height: 8px;
+  background: #667eea;
+  border-radius: 50%;
+  margin: 0 2px;
+  animation: typingAnimation 1.4s infinite ease-in-out;
+}
+
+.typing-dot:nth-child(1) {
+  animation-delay: -0.32s;
+}
+
+.typing-dot:nth-child(2) {
+  animation-delay: -0.16s;
+}
+
+@keyframes typingAnimation {
+  0%, 80%, 100% {
+    transform: scale(0.8);
+    opacity: 0.5;
+  }
+  40% {
+    transform: scale(1);
+    opacity: 1;
   }
 }

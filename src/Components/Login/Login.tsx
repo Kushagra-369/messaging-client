@@ -69,9 +69,9 @@ export default function Login() {
 
       // ✅ Save token
       localStorage.setItem("access_token", data.token);
-
-      // ✅ FORCE re-evaluation of auth + redirect to home
+      localStorage.setItem("userId", data.user._id); // 🔥 REQUIRED
       window.location.replace("/");
+
 
     } catch (error) {
       console.error("Login error:", error);

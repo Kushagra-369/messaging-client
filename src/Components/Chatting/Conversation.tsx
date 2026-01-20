@@ -9,9 +9,9 @@ interface User {
   username: string;
   first_name: string;
   last_name: string;
-  profileImg?: { 
+  profileImg?: {
     public_id?: string;
-    secure_url: string; 
+    secure_url: string;
   };
   isOnline: boolean;
   status?: string;
@@ -64,7 +64,7 @@ export default function Conversation() {
           headers: { Authorization: `Bearer ${token}` }
         });
         setConversations(res.data.conversations || []);
-        
+
         // If there's a userId in URL, select that conversation
         if (userId && res.data.conversations) {
           const conv = res.data.conversations.find((c: Conversation) => c.user._id === userId);
@@ -81,7 +81,7 @@ export default function Conversation() {
     };
 
     fetchConversations();
-    
+
     // Refresh conversations every 10 seconds
     const interval = setInterval(fetchConversations, 10000);
     return () => clearInterval(interval);
@@ -90,15 +90,20 @@ export default function Conversation() {
   // Fetch messages for selected user
   const fetchMessages = async (targetUserId: string) => {
     if (!token || !targetUserId) return;
-    
+
     setLoadingMessages(true);
     try {
       const res = await axios.get(`${APIURL}/get_messages/${targetUserId}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (res.data.success) {
-        setMessages(res.data.messages || []);
-        
+        // Sort messages by creation date
+        const sortedMessages = (res.data.messages || []).sort(
+          (a: Message, b: Message) =>
+            new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+        );
+        setMessages(sortedMessages);
+
         // Mark messages as read
         await markMessagesAsRead(targetUserId);
       }
@@ -112,13 +117,13 @@ export default function Conversation() {
   // Mark messages as read
   const markMessagesAsRead = async (senderId: string) => {
     try {
-      await axios.post(`${APIURL}/mark_messages_read`, 
+      await axios.post(`${APIURL}/mark_messages_read`,
         { senderId },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      
+
       // Update unread count locally
-      setConversations(prev => prev.map(conv => 
+      setConversations(prev => prev.map(conv =>
         conv.user._id === senderId ? { ...conv, unreadCount: 0 } : conv
       ));
     } catch (err) {
@@ -133,7 +138,7 @@ export default function Conversation() {
 
     setSending(true);
     try {
-      const res = await axios.post(`${APIURL}/send_message`, 
+      const res = await axios.post(`${APIURL}/send_message`,
         {
           receiverId: selectedUser._id,
           content: newMessage.trim()
@@ -142,23 +147,27 @@ export default function Conversation() {
       );
 
       if (res.data.success) {
-        // Add message to list
-        setMessages(prev => [...prev, res.data.data]);
+        // Add message to list and sort
+        const updatedMessages = [...messages, res.data.data].sort(
+          (a: Message, b: Message) =>
+            new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+        );
+        setMessages(updatedMessages);
         setNewMessage("");
-        
+
         // Update last message in conversations
-        setConversations(prev => prev.map(conv => 
-          conv.user._id === selectedUser._id 
-            ? { 
-                ...conv, 
-                lastMessage: {
-                  content: newMessage,
-                  createdAt: new Date().toISOString(),
-                  sender: currentUserId || "",
-                  receiver: selectedUser._id
-                },
-                unreadCount: 0
-              }
+        setConversations(prev => prev.map(conv =>
+          conv.user._id === selectedUser._id
+            ? {
+              ...conv,
+              lastMessage: {
+                content: newMessage,
+                createdAt: new Date().toISOString(),
+                sender: currentUserId || "",
+                receiver: selectedUser._id
+              },
+              unreadCount: 0
+            }
             : conv
         ));
       }
@@ -169,10 +178,9 @@ export default function Conversation() {
     }
   };
 
-  // Handle conversation click - DON'T NAVIGATE, just set selected user
+  // Handle conversation click
   const handleConversationClick = (conversation: Conversation) => {
     setSelectedUser(conversation.user);
-    // Only update URL without navigating away
     navigate(`/conversation/${conversation.user._id}`, { replace: true });
     fetchMessages(conversation.user._id);
   };
@@ -182,7 +190,7 @@ export default function Conversation() {
     const date = new Date(dateString);
     const now = new Date();
     const diffHours = (now.getTime() - date.getTime()) / (1000 * 60 * 60);
-    
+
     if (diffHours < 24) {
       return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     } else if (diffHours < 48) {
@@ -208,6 +216,11 @@ export default function Conversation() {
       return user.username.charAt(0).toUpperCase();
     }
     return 'U';
+  };
+
+  // Check if message is sent by current user
+  const isMessageFromCurrentUser = (senderId: string) => {
+    return senderId === currentUserId;
   };
 
   // Scroll to bottom of messages
@@ -246,7 +259,7 @@ export default function Conversation() {
       <div className="conversation-sidebar">
         <div className="sidebar-header">
           <h2>Messages</h2>
-          <button 
+          <button
             className="new-chat-btn"
             onClick={() => navigate('/')}
           >
@@ -259,7 +272,7 @@ export default function Conversation() {
             <div className="empty-icon">💬</div>
             <h3>No conversations yet</h3>
             <p>Start a new chat to begin messaging</p>
-            <button 
+            <button
               className="start-chat-btn"
               onClick={() => navigate('/')}
             >
@@ -271,9 +284,8 @@ export default function Conversation() {
             {conversations.map(conv => (
               <div
                 key={conv._id}
-                className={`conversation-item ${
-                  selectedUser?._id === conv.user._id ? 'active' : ''
-                }`}
+                className={`conversation-item ${selectedUser?._id === conv.user._id ? 'active' : ''
+                  }`}
                 onClick={() => handleConversationClick(conv)}
               >
                 <div className="conversation-avatar">
@@ -307,7 +319,7 @@ export default function Conversation() {
 
                   <div className="conversation-preview">
                     <p className="last-message">
-                      {conv.lastMessage 
+                      {conv.lastMessage
                         ? formatMessagePreview(conv.lastMessage.content, conv.lastMessage.sender)
                         : 'Start a conversation'}
                     </p>
@@ -330,7 +342,7 @@ export default function Conversation() {
           <>
             {/* Chat Header */}
             <div className="chat-header">
-              <button 
+              <button
                 className="back-button"
                 onClick={() => {
                   setSelectedUser(null);
@@ -340,7 +352,7 @@ export default function Conversation() {
               >
                 ←
               </button>
-              
+
               <div className="chat-user-info">
                 <div className="chat-avatar">
                   {selectedUser.profileImg?.secure_url ? (
@@ -356,7 +368,7 @@ export default function Conversation() {
                   )}
                   <div className={`online-status ${selectedUser.isOnline ? 'online' : 'offline'}`}></div>
                 </div>
-                
+
                 <div className="chat-user-details">
                   <h2 className="chat-user-name">
                     {selectedUser.first_name} {selectedUser.last_name}
@@ -388,26 +400,31 @@ export default function Conversation() {
                 </div>
               ) : (
                 <div className="messages-wrapper">
-                  {messages.map((message) => (
-                    <div
-                      key={message._id}
-                      className={`message-bubble ${
-                        message.sender === currentUserId ? 'sent' : 'received'
-                      }`}
-                    >
-                      <div className="message-content">
-                        <p>{message.content}</p>
-                        <span className="message-time">
-                          {formatTime(message.createdAt)}
-                          {message.sender === currentUserId && (
-                            <span className="read-status">
-                              {message.isRead ? '✓✓' : '✓'}
+                  {messages.map((message) => {
+                    const isSender = isMessageFromCurrentUser(message.sender);
+
+                    return (
+                      <div
+                        key={message._id}
+                        className={`message-container ${isSender ? 'sent' : 'received'}`}
+                      >
+                        <div className={`message-bubble ${isSender ? 'sent-bubble' : 'received-bubble'}`}>
+                          <div className="message-content">
+                            <p>{message.content}</p>
+                            <span className="message-time">
+                              {formatTime(message.createdAt)}
+                              {isSender && (
+                                <span className="read-status">
+                                  {message.isRead ? '✓✓' : '✓'}
+                                </span>
+                              )}
                             </span>
-                          )}
-                        </span>
+                          </div>
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
+
                   <div ref={messagesEndRef} />
                 </div>
               )}
@@ -425,9 +442,9 @@ export default function Conversation() {
                   className="message-input"
                   disabled={sending}
                 />
-                
-                <button 
-                  type="submit" 
+
+                <button
+                  type="submit"
                   className="send-button"
                   disabled={!newMessage.trim() || sending}
                 >
@@ -448,7 +465,7 @@ export default function Conversation() {
             <div className="select-chat-icon">👋</div>
             <h2>Select a conversation</h2>
             <p>Choose a chat from the list to start messaging</p>
-            <button 
+            <button
               className="browse-chats-btn"
               onClick={() => navigate('/')}
             >
