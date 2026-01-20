@@ -8,7 +8,7 @@ import Login from "./Components/Login/Login";
 import Profile from "./Components/User/Profile";
 import Chatting from "./Components/Chatting/Chatting";
 import { APIURL } from "./GlobalAPIURL";
-
+import Conversation from "./Components/Chatting/Conversation";
 export default function App() {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [checkingAuth, setCheckingAuth] = useState<boolean>(true);
@@ -114,9 +114,17 @@ export default function App() {
             isAuthenticated ? <Chatting /> : <Navigate to="/signin" replace />
           }
         />
+        <Route
+          path="/conversation/:userId?"
+          element={
+            isAuthenticated ? <Conversation /> : <Navigate to="/signin" replace />
+          }
+        />
+
 
         {/* ❌ FALLBACK */}
         <Route path="*" element={<Navigate to="/signin" replace />} />
+
       </Routes>
     </div>
   );

@@ -1,7 +1,9 @@
 import { useState } from 'react';
-import type { FormEvent } from 'react'; import axios from 'axios';
+import type { FormEvent } from 'react';
+import axios from 'axios';
 import { APIURL } from "../../GlobalAPIURL";
 import { useNavigate } from 'react-router-dom';
+
 interface User {
   _id: string;
   username: string;
@@ -31,6 +33,11 @@ export default function Home() {
   const [error, setError] = useState<string>('');
   const navigate = useNavigate();
 
+  // Get token from localStorage
+  const getToken = () => {
+    return localStorage.getItem('access_token');
+  };
+
   const handleSearch = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
@@ -40,12 +47,20 @@ export default function Home() {
     setError('');
     setSearchResults(null);
 
+    const token = getToken();
+    
+    if (!token) {
+      setError('Please login first');
+      setLoading(false);
+      return;
+    }
+
     try {
       const response = await axios.get<ApiResponse>(
         `${APIURL}/find_user_by_username/${searchQuery}`,
         {
           headers: {
-            Authorization: `Bearer ${localStorage.getItem('token')}`,
+            Authorization: `Bearer ${token}`,
           },
         }
       );
@@ -57,28 +72,53 @@ export default function Home() {
       }
     } catch (err: any) {
       console.error('Search error:', err);
+      if (err.response?.status === 401) {
+        // Token expired
+        localStorage.removeItem('access_token');
+        localStorage.removeItem('userId');
+        navigate('/signin');
+        return;
+      }
       setError(err.response?.data?.message || 'Failed to search user');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleStartChat = async (_userId: string) => {
+  const handleStartChat = async (userId: string) => {
+    const token = getToken();
+    
+    if (!token) {
+      setError('Please login first');
+      return;
+    }
+
     try {
       const response = await axios.get<ApiResponse>(
-        `${APIURL}/find_user_by_username/${searchQuery}`
+        `${APIURL}/find_user_by_username/${searchQuery}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
       );
 
       if (response.data.success) {
         navigate('/chat', {
           state: {
             user: response.data.user,
-            chatId: 'existing_or_new_chat_id' // Optional
           }
         });
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error('Failed to start chat:', err);
+      if (err.response?.status === 401) {
+        localStorage.removeItem('access_token');
+        localStorage.removeItem('userId');
+        navigate('/signin');
+        return;
+      }
+      setError('Failed to start chat. Please try again.');
     }
   };
 
@@ -87,6 +127,13 @@ export default function Home() {
     setSearchQuery('');
     setSearchResults(null);
     setError('');
+  };
+
+  const handleViewConversations = () => {
+    console.log('Button clicked - Navigating to /conversation');
+    console.log('Current token:', localStorage.getItem('access_token'));
+    console.log('Current userId:', localStorage.getItem('userId'));
+    navigate('/conversation');
   };
 
   return (
@@ -162,6 +209,7 @@ export default function Home() {
           </button>
 
           <button
+            onClick={handleViewConversations}
             className="
               px-6 py-3 rounded-xl
               border
