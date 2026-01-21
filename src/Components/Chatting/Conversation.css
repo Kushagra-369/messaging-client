@@ -386,15 +386,11 @@
 .message-bubble {
   max-width: 70%;
   position: relative;
-  display: flex;
-  flex-direction: column;
   animation: fadeIn 0.3s ease-out;
 }
 
-/* SENT message bubble (You - Right side) */
-.sent-bubble {
-  align-items: flex-end;
-}
+
+
 
 .sent-bubble .message-content {
   background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
@@ -403,10 +399,7 @@
   box-shadow: 0 2px 8px rgba(76, 175, 80, 0.3);
 }
 
-/* RECEIVED message bubble (Other user - Left side) */
-.received-bubble {
-  align-items: flex-start;
-}
+
 
 .received-bubble .message-content {
   background: white;

@@ -53,8 +53,23 @@ export default function Conversation() {
   const [loadingMessages, setLoadingMessages] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
+  const getUserIdFromToken = () => {
+    const token = localStorage.getItem("access_token");
+    if (!token) return null;
+
+    try {
+      const payload = JSON.parse(atob(token.split(".")[1]));
+      return payload.id || null;
+    } catch {
+      return null;
+    }
+  };
+
   const token = localStorage.getItem("access_token");
-  const currentUserId = localStorage.getItem("userId");
+  const currentUserId = getUserIdFromToken();
+
+
+
 
   // Fetch conversations
   useEffect(() => {
@@ -220,8 +235,13 @@ export default function Conversation() {
 
   // Check if message is sent by current user
   const isMessageFromCurrentUser = (senderId: string) => {
-    return senderId === currentUserId;
+    return senderId?.toString() === currentUserId?.toString();
   };
+
+  useEffect(() => {
+    console.log("Resolved currentUserId:", currentUserId);
+  }, []);
+
 
   // Scroll to bottom of messages
   const scrollToBottom = () => {
