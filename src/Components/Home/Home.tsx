@@ -85,7 +85,7 @@ export default function Home() {
     }
   };
 
-  const handleStartChat = async (userId: string) => {
+  const handleStartChat = async (_userId: string) => {
     const token = getToken();
     
     if (!token) {
