@@ -3,6 +3,7 @@ import SignUp from "./Components/FirstSign/FirstSignin";
 import Signin from "./Components/FirstSign/Signin";
 import ThemeToggle from "./Components/ThemeToggle";
 import Otp from "./Components/FirstSign/Otp";
+import Forgot_Password from "./Components/Forgot_password/Forgot_Password";
 export default function App() {
   return (
     <div className="relative min-h-screen">
@@ -21,6 +22,7 @@ export default function App() {
         <Route path="/" element={<Signin />} />
         <Route path="/login" element={<SignUp />} />
         <Route path="/otp" element={<Otp />} />
+        <Route path="/forgot_password" element={<Forgot_Password />} />
         
       </Routes>
     </div>

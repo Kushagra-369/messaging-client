@@ -218,6 +218,40 @@ export default function SignUp() {
     }
   };
 
+  const handleForgotPassword = async () => {
+    if (!formData.email) {
+      setError("Enter your email first");
+      return;
+    }
+
+    try {
+      setLoading(true);
+      setError("");
+
+      const form = new FormData();
+      form.append("email", formData.email);
+
+      const res = await fetch(`${APIURL}/forgot_password_gmail`, {
+        method: "POST",
+        body: form,
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        setError(""); // clear error
+        alert("Reset link sent to your Gmail ✅"); // ya custom success state bana sakte ho
+      } else {
+        setError(data.message || "Failed to send reset link");
+      }
+    } catch (err) {
+      setError("Something went wrong");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+
   const handleGoogleSignup = () => {
     setSocialLoading(prev => ({ ...prev, google: true }));
     setError("");
@@ -241,7 +275,7 @@ export default function SignUp() {
   return (
     <div className="min-h-screen flex items-center justify-center px-4 relative overflow-hidden bg-linear-to-br">
       <FloatingParticles />
-      
+
       <motion.div
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: showContent ? 1 : 0, y: showContent ? 0 : 30 }}
@@ -269,9 +303,9 @@ export default function SignUp() {
                   ease: "easeInOut",
                 }}
               />
-              <img 
-                src={icon} 
-                alt="Logo" 
+              <img
+                src={icon}
+                alt="Logo"
                 className="relative w-20 h-20 rounded-full shadow-lg"
               />
             </div>
@@ -454,27 +488,26 @@ export default function SignUp() {
                   />
 
                   <div className="space-y-1">
-                    <div className="flex justify-between items-center">
-                      <AnimatedInput
-                        icon={FaLock}
-                        type="password"
-                        name="password"
-                        placeholder="••••••••"
-                        value={formData.password}
-                        onChange={handleChange}
-                        disabled={loading || socialLoading.google || socialLoading.github}
-                        label="Password"
-                        delay={0.4}
-                      />
-                    </div>
+                    <AnimatedInput
+                      icon={FaLock}
+                      type="password"
+                      name="password"
+                      placeholder="••••••••"
+                      value={formData.password}
+                      onChange={handleChange}
+                      disabled={loading || socialLoading.google || socialLoading.github}
+                      label="Password"
+                      delay={0.4}
+                    />
                     <motion.div
                       className="text-right"
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       transition={{ delay: 0.5 }}
                     >
-                      <Link
-                        to="/forgot-password"
+                      <button
+                        type="button"
+                        onClick={handleForgotPassword}
                         className="text-sm text-blue-600 dark:text-blue-400 hover:underline inline-flex items-center gap-1 group"
                       >
                         Forgot password?
@@ -484,7 +517,8 @@ export default function SignUp() {
                         >
                           →
                         </motion.span>
-                      </Link>
+                      </button>
+
                     </motion.div>
                   </div>
 
