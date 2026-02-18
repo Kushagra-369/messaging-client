@@ -17,10 +17,13 @@ export default function App() {
       {!isLoggedIn && <ThemeToggle />}
 
       <div
-        className="fixed inset-0 -z-10 w-full h-full bg-white 
-        [background:radial-gradient(125%_125%_at_50%_10%,#fff_40%,#7ee0ff_100%)]
-        dark:[background:radial-gradient(125%_125%_at_50%_10%,#000_40%,#63e_100%)]"
-      />
+  className="
+  fixed inset-0 -z-10 w-full h-full
+  bg-[radial-gradient(120%_120%_at_10%_10%,#38bdf8_0%,#22d3ee_40%,#14b8a6_70%,#ffffff_100%)]
+  dark:bg-[radial-gradient(120%_120%_at_10%_10%,#0c4a6e_0%,#0f766e_40%,#022c22_70%,#020617_100%)]
+"
+/>
+
 
       <Routes>
 
