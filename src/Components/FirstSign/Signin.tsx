@@ -1,4 +1,4 @@
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { APIURL } from "../../GlobalAPIURL";
 import { FaGithub, FaGoogle, FaArrowRight, FaEnvelope, FaUser, FaPhone, FaLock, FaChevronDown, FaChevronUp } from "react-icons/fa";
@@ -17,9 +17,8 @@ const FloatingOrbs = () => {
           key={i}
           className="absolute rounded-full mix-blend-multiply filter blur-xl opacity-20"
           style={{
-            background: `radial-linear(circle, ${
-              i % 2 === 0 ? '#3b82f6' : '#8b5cf6'
-            } 0%, transparent 70%)`,
+            background: `radial-linear(circle, ${i % 2 === 0 ? '#3b82f6' : '#8b5cf6'
+              } 0%, transparent 70%)`,
             width: `${300 + i * 100}px`,
             height: `${300 + i * 100}px`,
             left: `${(i * 20) % 100}%`,
@@ -41,25 +40,23 @@ const FloatingOrbs = () => {
   );
 };
 
-
-
 // Input field with animation
-const AnimatedInput = ({ 
-  icon: Icon, 
-  name, 
-  placeholder, 
-  type = "text", 
-  value, 
+const AnimatedInput = ({
+  icon: Icon,
+  name,
+  placeholder,
+  type = "text",
+  value,
   onChange,
   delay = 0,
   select,
   options
-}: { 
-  icon: any; 
-  name: string; 
-  placeholder: string; 
-  type?: string; 
-  value: any; 
+}: {
+  icon: any;
+  name: string;
+  placeholder: string;
+  type?: string;
+  value: any;
   onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => void;
   delay?: number;
   select?: boolean;
@@ -125,23 +122,23 @@ const SoftwareIcon = () => {
       }}
     >
       <div className="absolute inset-0 bg-linear-to-r from-blue-500 to-purple-600 rounded-2xl blur-lg opacity-50" />
-    <div className="relative w-full h-full bg-linear-to-r from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg">
-  
-  <motion.img
-    src={icon}          // ✅ imported image
-    alt="Auralink"
-    className="w-full h-full object-contain"
-    animate={{
-      scale: [1, 1.1, 1],
-    }}
-    transition={{
-      duration: 2,
-      repeat: Infinity,
-      ease: "easeInOut",
-    }}
-  />
+      <div className="relative w-full h-full bg-linear-to-r from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg">
 
-</div>
+        <motion.img
+          src={icon}          // ✅ imported image
+          alt="Auralink"
+          className="w-full h-full object-contain"
+          animate={{
+            scale: [1, 1.1, 1],
+          }}
+          transition={{
+            duration: 2,
+            repeat: Infinity,
+            ease: "easeInOut",
+          }}
+        />
+
+      </div>
 
     </motion.div>
   );
@@ -151,6 +148,7 @@ export default function Signin() {
   const navigate = useNavigate();
   const [isExpanded, setIsExpanded] = useState(false);
   const [showDetails, setShowDetails] = useState(false);
+  const [params] = useSearchParams();
 
   const [formData, setFormData] = useState({
     username: "",
@@ -175,6 +173,39 @@ export default function Signin() {
     }, 2000);
     return () => clearTimeout(timer);
   }, []);
+  // ✅ Google/Github login token detect
+  useEffect(() => {
+    const token = params.get("token");
+
+    const fetchUser = async () => {
+      try {
+        if (!token) return;
+
+        localStorage.setItem("token", token);
+
+        const res = await fetch(`${APIURL}/auth_me`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        const data = await res.json();
+
+        if (res.ok && data.user) {
+          localStorage.setItem("user", JSON.stringify(data.user));
+        }
+
+        navigate("/home");
+      } catch (err) {
+        console.log(err);
+        navigate("/");
+      }
+    };
+
+    fetchUser();
+  }, []);
+
+
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -263,7 +294,7 @@ export default function Signin() {
   return (
     <div className="min-h-screen flex items-center justify-center px-4 relative overflow-hidden bg-linear-to-br ">
       <FloatingOrbs />
-      
+
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -272,8 +303,8 @@ export default function Signin() {
       >
         <div className="rounded-3xl border bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl dark:text-white p-8 shadow-2xl">
           <SoftwareIcon />
-          
-          <motion.h1 
+
+          <motion.h1
             className="text-3xl font-bold text-center mb-2 bg-linear-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent"
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -281,8 +312,8 @@ export default function Signin() {
           >
             Create Account
           </motion.h1>
-          
-          <motion.p 
+
+          <motion.p
             className="text-center text-gray-600 dark:text-gray-400 mb-8"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -292,7 +323,7 @@ export default function Signin() {
           </motion.p>
 
           {/* Social Sign-in Buttons with Icons Only Initially */}
-          <motion.div 
+          <motion.div
             className="flex justify-center gap-6 mb-8"
             initial={{ scale: 0.8 }}
             animate={{ scale: 1 }}
@@ -518,7 +549,7 @@ export default function Signin() {
             )}
           </AnimatePresence>
 
-          <motion.p 
+          <motion.p
             className="text-center mt-6 text-sm text-gray-600 dark:text-gray-400"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}

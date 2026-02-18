@@ -48,61 +48,20 @@ export default function Navbar() {
     };
   }, []);
 
-  const fetchUserData = async () => {
+  const fetchUserData = () => {
     try {
-      const token = localStorage.getItem("access_token");
-      
-      if (!token) {
-        setIsLoadingUser(false);
-        return;
-      }
+      const storedUser = localStorage.getItem("user");
 
-      // First get user ID from auth_me
-      const authResponse = await fetch(`${APIURL}/auth_me`, {
-        method: "GET",
-        headers: {
-          "Authorization": `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
-
-      if (!authResponse.ok) {
-        setIsLoadingUser(false);
-        return;
-      }
-
-      const authResult = await authResponse.json();
-      
-      if (authResult.success && authResult.user) {
-        const userId = authResult.user.id || authResult.user._id;
-        
-        // Then get full user data using get_user_by_id
-        const userResponse = await fetch(`${APIURL}/get_user_by_id/${userId}`, {
-          method: "GET",
-          headers: {
-            "Authorization": `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        });
-
-        if (userResponse.ok) {
-          const userResult = await userResponse.json();
-          if (userResult.success && userResult.user) {
-            setUserData(userResult.user);
-          } else if (userResult.success && userResult.data) {
-            setUserData(userResult.data);
-          }
-        } else {
-          // Fallback to auth_me data
-          setUserData(authResult.user);
-        }
+      if (storedUser) {
+        setUserData(JSON.parse(storedUser));
       }
     } catch (error) {
-      console.error("Error fetching user data:", error);
+      console.error("Error loading user:", error);
     } finally {
       setIsLoadingUser(false);
     }
   };
+
 
   const handleProfileClick = (): void => {
     setIsProfileOpen(!isProfileOpen);
@@ -118,86 +77,45 @@ export default function Navbar() {
     setIsSigningOut(true);
 
     try {
-      // Get token from localStorage
-      const token = localStorage.getItem("access_token");
+      // Optional backend logout call (agar future me chahiye)
+      const token = localStorage.getItem("token");
 
       if (token) {
-        // Optional: Call backend logout endpoint if you have one
         try {
-          await fetch("/api/auth/logout", {
+          await fetch(`${APIURL}/logout`, {
             method: "POST",
             headers: {
-              "Content-Type": "application/json",
               Authorization: `Bearer ${token}`,
             },
           });
-        } catch (error) {
-          console.log("Logout API call failed, proceeding with client-side logout");
+        } catch {
+          console.log("Backend logout optional");
         }
       }
 
-      // Clear all client-side storage
-      localStorage.removeItem("access_token");
+      // ✅ Clear ONLY needed storage
       localStorage.removeItem("token");
       localStorage.removeItem("user");
-      localStorage.removeItem("theme");
-      sessionStorage.clear();
 
-      // Clear all cookies
-      document.cookie.split(";").forEach(cookie => {
-        const eqPos = cookie.indexOf("=");
-        const name = eqPos > -1 ? cookie.substr(0, eqPos).trim() : cookie.trim();
-        document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/;domain=${window.location.hostname}`;
-      });
-
-      // Show success message
-      toast.success("Signed out successfully!", {
-        duration: 3000,
-        style: {
-          background: isDark ? "#1f2937" : "#f0f9ff",
-          border: isDark ? "1px solid #374151" : "1px solid #bae6fd",
-          color: isDark ? "#f9fafb" : "#0c4a6e",
-          padding: "12px 16px",
-        },
-      });
-
-      // Close dropdown and redirect after delay
+      setUserData(null);
       setIsProfileOpen(false);
       setShowConfirmLogout(false);
-      setUserData(null);
 
-      // Force a complete page reload and redirect to login
-      setTimeout(() => {
-        window.location.href = "/login";
-      }, 1000);
+      toast.success("Signed out successfully!");
+
+      // ✅ React way redirect
+      navigate("/");
 
     } catch (error) {
       console.error("Sign out error:", error);
 
-      // Force clear everything and redirect
       localStorage.clear();
-      sessionStorage.clear();
-      setUserData(null);
-
-      toast.error("Signed out with warnings", {
-        duration: 3000,
-        style: {
-          background: isDark ? "#7f1d1d" : "#fef2f2",
-          border: isDark ? "1px solid #991b1b" : "1px solid #fecaca",
-          color: isDark ? "#fecaca" : "#7f1d1d",
-          padding: "12px 16px",
-        },
-      });
-
-      setIsProfileOpen(false);
-      setShowConfirmLogout(false);
-
-      // Force redirect
-      window.location.href = "/login";
+      navigate("/");
     } finally {
       setIsSigningOut(false);
     }
   };
+
 
   const handleViewProfile = (): void => {
     navigate("/profile");
@@ -237,7 +155,7 @@ export default function Navbar() {
   // Format user name
   const getUserName = () => {
     if (!userData) return "Guest";
-    
+
     if (userData.first_name && userData.last_name) {
       return `${userData.first_name} ${userData.last_name}`;
     } else if (userData.first_name) {
@@ -256,7 +174,7 @@ export default function Navbar() {
   // Get user initials for profile picture
   const getUserInitials = () => {
     if (!userData) return "G";
-    
+
     if (userData.first_name) {
       return userData.first_name.charAt(0).toUpperCase();
     } else if (userData.username) {
@@ -443,8 +361,8 @@ export default function Navbar() {
                   relative
                 ">
                   {userData?.profileImg?.secure_url ? (
-                    <img 
-                      src={userData.profileImg.secure_url} 
+                    <img
+                      src={userData.profileImg.secure_url}
                       alt="Profile"
                       className="w-8 h-8 rounded-full object-cover"
                     />

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { APIURL } from "../../GlobalAPIURL";
 import { FaGithub, FaGoogle, FaEnvelope, FaLock, FaArrowRight, FaCheckCircle, FaChevronDown, FaChevronUp } from "react-icons/fa";
 import { motion, AnimatePresence } from "framer-motion";
@@ -159,6 +159,8 @@ export default function SignUp() {
   const [showContent, setShowContent] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
   const [showDetails, setShowDetails] = useState(false);
+  const [params] = useSearchParams();
+
 
   useEffect(() => {
     setShowContent(true);
@@ -168,6 +170,40 @@ export default function SignUp() {
     }, 2000);
     return () => clearTimeout(timer);
   }, []);
+
+  // ✅ Google/Github token detect
+  useEffect(() => {
+    const token = params.get("token");
+
+    const fetchUser = async () => {
+      try {
+        if (!token) return;
+
+        localStorage.setItem("token", token);
+
+        const res = await fetch(`${APIURL}/auth_me`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        const data = await res.json();
+
+        if (res.ok && data.user) {
+          localStorage.setItem("user", JSON.stringify(data.user));
+        }
+
+        navigate("/home");
+      } catch (err) {
+        console.log(err);
+        navigate("/");
+      }
+    };
+
+    fetchUser();
+  }, []);
+
+
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData(prev => ({
@@ -205,7 +241,7 @@ export default function SignUp() {
 
         setDone(true);
         setTimeout(() => {
-          navigate("/dashboard");
+          navigate("/home");
         }, 2000);
       } else {
         setError(data.message || "Login failed. Please check your credentials.");
