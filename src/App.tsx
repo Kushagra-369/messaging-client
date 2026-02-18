@@ -8,7 +8,7 @@ import Home from "./Components/Home/Home";
 import Navbar from "./Components/Navbar/Navbar";
 export default function App() {
 
-  // ✅ direct token check (no state needed)
+
   const isLoggedIn = !!localStorage.getItem("token");
 
   return (
@@ -17,47 +17,23 @@ export default function App() {
       {!isLoggedIn && <ThemeToggle />}
 
       <div
-  className="
-  fixed inset-0 -z-10 w-full h-full
-  bg-[radial-gradient(120%_120%_at_10%_10%,#38bdf8_0%,#22d3ee_40%,#14b8a6_70%,#ffffff_100%)]
-  dark:bg-[radial-gradient(120%_120%_at_10%_10%,#0c4a6e_0%,#0f766e_40%,#022c22_70%,#020617_100%)]
-"
-/>
+          className="
+    fixed inset-0 -z-10 w-full h-full
+    bg-[radial-gradient(120%_120%_at_10%_10%,#38bdf8_0%,#22d3ee_40%,#14b8a6_70%,#ffffff_100%)]
+    dark:bg-[radial-gradient(120%_120%_at_10%_10%,#0c4a6e_0%,#0f766e_40%,#022c22_70%,#020617_100%)]
+  "
+      />
 
 
       <Routes>
 
-        <Route path="/" element={isLoggedIn ? <Navigate to="/home" /> : <Signin />} />
+        {/* <Route path="/" element={isLoggedIn ? <Navigate to="/" /> : <Signin />} /> */}
 
-        <Route
-          path="/home"
-          element={
-            isLoggedIn ? (
-              <>
-                <Navbar />
-                <Home />
-              </>
-            ) : (
-              <Navigate to="/" />
-            )
-          }
-        />
+        <Route path="/" element={isLoggedIn ? (<> <Navbar /> <Home /></>):<Signin />}/>
 
-
-        <Route
-          path="/login"
-          element={isLoggedIn ? <Navigate to="/home" /> : <SignUp />}
-        />
-
-        <Route
-          path="/otp"
-          element={isLoggedIn ? <Navigate to="/home" /> : <Otp />}
-        />
-
-        <Route
-          path="/forgot_password"
-          element={isLoggedIn ? <Navigate to="/home" /> : <Forgot_Password />}
-        />
+        <Route path="/login" element={isLoggedIn ? <Navigate to="/" /> : <SignUp />} />
+        <Route path="/otp" element={isLoggedIn ? <Navigate to="/" /> : <Otp />} />
+        <Route path="/forgot_password" element={isLoggedIn ? <Navigate to="/" /> : <Forgot_Password />} />
 
       </Routes>
 
