@@ -104,13 +104,13 @@ export default function Navbar() {
       toast.success("Signed out successfully!");
 
       // ✅ React way redirect
-      navigate("/");
+      navigate("/login");
 
     } catch (error) {
       console.error("Sign out error:", error);
 
       localStorage.clear();
-      navigate("/");
+      navigate("/login");
     } finally {
       setIsSigningOut(false);
     }

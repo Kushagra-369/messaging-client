@@ -8,7 +8,6 @@ import Home from "./Components/Home/Home";
 import Navbar from "./Components/Navbar/Navbar";
 export default function App() {
 
-  // ✅ direct token check (no state needed)
   const isLoggedIn = !!localStorage.getItem("token");
 
   return (
