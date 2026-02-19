@@ -25,17 +25,7 @@ export interface User {
   updatedAt: string;
 }
 
-interface RegisterData {
-  username: string;
-  email: string;
-  password: string;
-  first_name: string;
-  last_name: string;
-  gender: string;
-}
-
 interface AuthResponse {
-  success: boolean;
   token?: string;
   user?: User;
   message?: string;
@@ -47,7 +37,6 @@ interface AuthContextType {
   loading: boolean;
   error: string | null;
   login: (email: string, password: string) => Promise<boolean>;
-  register: (data: RegisterData) => Promise<boolean>;
   logout: () => void;
   updateUser: (updatedUser: Partial<User>) => void;
   clearError: () => void;
@@ -61,7 +50,6 @@ export const AuthContext = createContext<AuthContextType>({
   loading: true,
   error: null,
   login: async () => false,
-  register: async () => false,
   logout: () => {},
   updateUser: () => {},
   clearError: () => {},
@@ -69,11 +57,7 @@ export const AuthContext = createContext<AuthContextType>({
 
 /* ===================== PROVIDER ===================== */
 
-interface AuthProviderProps {
-  children: ReactNode;
-}
-
-export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
+export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
@@ -82,14 +66,18 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   /* ===================== CLEAR AUTH ===================== */
 
   const clearAuth = () => {
-    localStorage.removeItem("access_token");
-    localStorage.removeItem("user");
+
+    // 🔥 FULL STORAGE CLEAN (secure logout)
+    const theme = localStorage.getItem("theme"); // keep theme if needed
+    localStorage.clear();
+    if (theme) localStorage.setItem("theme", theme);
+
     setUser(null);
     setToken(null);
     setError(null);
   };
 
-  /* ===================== INIT AUTH (SECURE) ===================== */
+  /* ===================== INIT AUTH ===================== */
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -114,8 +102,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         } else {
           clearAuth();
         }
-      } catch (err) {
-        // 🔥 INVALID TOKEN AUTO LOGOUT
+      } catch {
         clearAuth();
       }
 
@@ -124,6 +111,40 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
     checkAuth();
   }, []);
+
+  /* ===================== TOKEN WATCHER (ANTI-TAMPER) ===================== */
+
+  useEffect(() => {
+    const interval = setInterval(async () => {
+      const storedToken = localStorage.getItem("access_token");
+
+      // removed manually
+      if (!storedToken && user) {
+        clearAuth();
+        return;
+      }
+
+      // changed manually
+      if (storedToken && storedToken !== token) {
+        try {
+          const res = await axios.get(`${APIURL}/auth_me`, {
+            headers: { Authorization: `Bearer ${storedToken}` },
+          });
+
+          if (!res.data?.user) {
+            clearAuth();
+          } else {
+            setToken(storedToken);
+            setUser(res.data.user);
+          }
+        } catch {
+          clearAuth();
+        }
+      }
+    }, 2000); // check every 2 sec
+
+    return () => clearInterval(interval);
+  }, [token, user]);
 
   /* ===================== LOGIN ===================== */
 
@@ -151,35 +172,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       return false;
     } catch (err: any) {
       setError(err.response?.data?.message || "Login error");
-      return false;
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  /* ===================== REGISTER ===================== */
-
-  const register = async (data: RegisterData): Promise<boolean> => {
-    try {
-      setLoading(true);
-      setError(null);
-
-      const res = await axios.post<AuthResponse>(`${APIURL}/register`, data);
-
-      if (res.data.token && res.data.user) {
-        localStorage.setItem("access_token", res.data.token);
-        localStorage.setItem("user", JSON.stringify(res.data.user));
-
-        setToken(res.data.token);
-        setUser(res.data.user);
-
-        return true;
-      }
-
-      setError(res.data.message || "Registration failed");
-      return false;
-    } catch (err: any) {
-      setError(err.response?.data?.message || "Registration error");
       return false;
     } finally {
       setLoading(false);
@@ -221,7 +213,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     const resInterceptor = axios.interceptors.response.use(
       (res) => res,
       (err) => {
-        // 🔥 AUTO LOGOUT IF TOKEN INVALID
         if (err.response?.status === 401) {
           clearAuth();
         }
@@ -235,7 +226,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     };
   }, []);
 
-  /* ===================== CONTEXT VALUE ===================== */
+  /* ===================== VALUE ===================== */
 
   const value: AuthContextType = {
     user,
@@ -243,7 +234,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     loading,
     error,
     login,
-    register,
     logout,
     updateUser,
     clearError,

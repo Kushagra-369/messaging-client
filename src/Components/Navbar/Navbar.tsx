@@ -3,6 +3,7 @@ import { useTheme } from "../../Context/ThemeContext";
 import { useNavigate } from "react-router-dom";
 import toast, { Toaster } from "react-hot-toast";
 import { APIURL } from "../../GlobalAPIURL"
+import { useAuth } from "../Context/AuthContext";
 
 // Define user interface
 interface UserData {
@@ -27,6 +28,7 @@ export default function Navbar() {
   const [, setIsLoadingUser] = useState<boolean>(true);
   const profileRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
+  const { logout } = useAuth();
 
   // Fetch user data on component mount
   useEffect(() => {
@@ -77,39 +79,28 @@ export default function Navbar() {
     setIsSigningOut(true);
 
     try {
-      // Optional backend logout call (agar future me chahiye)
-      const token = localStorage.getItem("token");
+
+      // OPTIONAL backend logout
+      const token = localStorage.getItem("access_token");
 
       if (token) {
-        try {
-          await fetch(`${APIURL}/logout`, {
-            method: "POST",
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          });
-        } catch {
-          console.log("Backend logout optional");
-        }
+        await fetch(`${APIURL}/logout`, {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }).catch(() => { });
       }
 
-      // ✅ Clear ONLY needed storage
-      localStorage.removeItem("token");
-      localStorage.removeItem("user");
-
-      setUserData(null);
-      setIsProfileOpen(false);
-      setShowConfirmLogout(false);
+      // 🔥 REAL LOGOUT
+      logout();
 
       toast.success("Signed out successfully!");
 
-      // ✅ React way redirect
       navigate("/login");
 
-    } catch (error) {
-      console.error("Sign out error:", error);
-
-      localStorage.clear();
+    } catch (err) {
+      logout();
       navigate("/login");
     } finally {
       setIsSigningOut(false);

@@ -4,6 +4,7 @@ import { APIURL } from "../../GlobalAPIURL";
 import { FaGithub, FaGoogle, FaArrowRight, FaEnvelope, FaUser, FaPhone, FaLock, FaChevronDown, FaChevronUp } from "react-icons/fa";
 import { motion, AnimatePresence } from "framer-motion";
 import icon from "../../assets/images/icon.png"
+import { useAuth } from "../Context/AuthContext";
 
 // Available country codes from schema
 const COUNTRY_CODES = ['+1', '+44', '+91', '+92', '+971'];
@@ -149,6 +150,7 @@ export default function Signin() {
   const [isExpanded, setIsExpanded] = useState(false);
   const [showDetails, setShowDetails] = useState(false);
   const [params] = useSearchParams();
+  const {  } = useAuth();
 
   const [formData, setFormData] = useState({
     username: "",
@@ -177,11 +179,12 @@ export default function Signin() {
   useEffect(() => {
     const token = params.get("token");
 
+    if (!token) return;
+
     const fetchUser = async () => {
       try {
-        if (!token) return;
-
-        localStorage.setItem("token", token);
+        // IMPORTANT — same key as AuthContext
+        localStorage.setItem("access_token", token);
 
         const res = await fetch(`${APIURL}/auth_me`, {
           headers: {
@@ -193,9 +196,11 @@ export default function Signin() {
 
         if (res.ok && data.user) {
           localStorage.setItem("user", JSON.stringify(data.user));
+
+          // 🔥 FORCE RELOAD SO AUTHCONTEXT RE-RUNS
+          window.location.href = "/";
         }
 
-        navigate("/");
       } catch (err) {
         console.log(err);
         navigate("/login");
@@ -204,6 +209,7 @@ export default function Signin() {
 
     fetchUser();
   }, []);
+
 
 
 
