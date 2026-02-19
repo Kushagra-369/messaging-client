@@ -195,10 +195,10 @@ export default function Signin() {
           localStorage.setItem("user", JSON.stringify(data.user));
         }
 
-        navigate("/home");
+        navigate("/");
       } catch (err) {
         console.log(err);
-        navigate("/");
+        navigate("/login");
       }
     };
 

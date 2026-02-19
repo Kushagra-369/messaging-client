@@ -1,8 +1,9 @@
 // context/AuthContext.tsx
-import React, { createContext, useState, useEffect } from 'react';
-import type { ReactNode } from 'react';
-import axios from 'axios';
-import { APIURL } from '../../GlobalAPIURL';
+
+import React, { createContext, useState, useEffect } from "react";
+import type { ReactNode } from "react";
+import axios from "axios";
+import { APIURL } from "../../GlobalAPIURL";
 
 /* ===================== TYPES ===================== */
 
@@ -78,29 +79,51 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
-  /* ===================== INIT AUTH ===================== */
-
-  useEffect(() => {
-    const storedToken = localStorage.getItem('access_token');
-    const storedUser = localStorage.getItem('user');
-
-    if (storedToken && storedUser) {
-      setToken(storedToken);
-      setUser(JSON.parse(storedUser));
-    }
-
-    setLoading(false);
-  }, []);
-
-  /* ===================== HELPERS ===================== */
+  /* ===================== CLEAR AUTH ===================== */
 
   const clearAuth = () => {
-    localStorage.removeItem('access_token');
-    localStorage.removeItem('user');
-    setToken(null);
+    localStorage.removeItem("access_token");
+    localStorage.removeItem("user");
     setUser(null);
+    setToken(null);
     setError(null);
   };
+
+  /* ===================== INIT AUTH (SECURE) ===================== */
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      const storedToken = localStorage.getItem("access_token");
+
+      if (!storedToken) {
+        setLoading(false);
+        return;
+      }
+
+      try {
+        const res = await axios.get(`${APIURL}/auth_me`, {
+          headers: {
+            Authorization: `Bearer ${storedToken}`,
+          },
+        });
+
+        if (res.data?.user) {
+          setUser(res.data.user);
+          setToken(storedToken);
+          localStorage.setItem("user", JSON.stringify(res.data.user));
+        } else {
+          clearAuth();
+        }
+      } catch (err) {
+        // 🔥 INVALID TOKEN AUTO LOGOUT
+        clearAuth();
+      }
+
+      setLoading(false);
+    };
+
+    checkAuth();
+  }, []);
 
   /* ===================== LOGIN ===================== */
 
@@ -109,23 +132,25 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setLoading(true);
       setError(null);
 
-      const res = await axios.post<AuthResponse>(`${APIURL}/login`, {
+      const res = await axios.post<AuthResponse>(`${APIURL}/user_login`, {
         email,
         password,
       });
 
-      if (res.data.success && res.data.token && res.data.user) {
-        localStorage.setItem('access_token', res.data.token);
-        localStorage.setItem('user', JSON.stringify(res.data.user));
+      if (res.data.token && res.data.user) {
+        localStorage.setItem("access_token", res.data.token);
+        localStorage.setItem("user", JSON.stringify(res.data.user));
+
         setToken(res.data.token);
         setUser(res.data.user);
+
         return true;
       }
 
-      setError(res.data.message || 'Login failed');
+      setError(res.data.message || "Login failed");
       return false;
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Login error');
+      setError(err.response?.data?.message || "Login error");
       return false;
     } finally {
       setLoading(false);
@@ -141,18 +166,20 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
       const res = await axios.post<AuthResponse>(`${APIURL}/register`, data);
 
-      if (res.data.success && res.data.token && res.data.user) {
-        localStorage.setItem('access_token', res.data.token);
-        localStorage.setItem('user', JSON.stringify(res.data.user));
+      if (res.data.token && res.data.user) {
+        localStorage.setItem("access_token", res.data.token);
+        localStorage.setItem("user", JSON.stringify(res.data.user));
+
         setToken(res.data.token);
         setUser(res.data.user);
+
         return true;
       }
 
-      setError(res.data.message || 'Registration failed');
+      setError(res.data.message || "Registration failed");
       return false;
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Registration error');
+      setError(err.response?.data?.message || "Registration error");
       return false;
     } finally {
       setLoading(false);
@@ -169,9 +196,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const updateUser = (updatedUser: Partial<User>) => {
     if (!user) return;
+
     const newUser = { ...user, ...updatedUser };
+
     setUser(newUser);
-    localStorage.setItem('user', JSON.stringify(newUser));
+    localStorage.setItem("user", JSON.stringify(newUser));
   };
 
   const clearError = () => setError(null);
@@ -180,16 +209,19 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   useEffect(() => {
     const reqInterceptor = axios.interceptors.request.use((config) => {
-      const accessToken = localStorage.getItem('access_token');
+      const accessToken = localStorage.getItem("access_token");
+
       if (accessToken && !config.headers.Authorization) {
         config.headers.Authorization = `Bearer ${accessToken}`;
       }
+
       return config;
     });
 
     const resInterceptor = axios.interceptors.response.use(
       (res) => res,
       (err) => {
+        // 🔥 AUTO LOGOUT IF TOKEN INVALID
         if (err.response?.status === 401) {
           clearAuth();
         }
@@ -224,6 +256,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
 export const useAuth = () => {
   const ctx = React.useContext(AuthContext);
-  if (!ctx) throw new Error('useAuth must be used within AuthProvider');
+  if (!ctx) throw new Error("useAuth must be used within AuthProvider");
   return ctx;
 };
