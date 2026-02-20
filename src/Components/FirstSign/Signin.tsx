@@ -223,6 +223,7 @@ export default function Signin() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+      if (loading) return; 
 
     const { username, first_name, last_name, email, password, country_code, mobile_number } = formData;
 

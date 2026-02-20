@@ -55,6 +55,27 @@ export const AuthContext = createContext<AuthContextType>({
   clearError: () => {},
 });
 
+/* ===================== TOKEN VALIDATOR ===================== */
+
+// 🔥 JWT must have 3 parts
+// first & last length fixed (change according to your backend token)
+const FIRST_LENGTH = 36;
+const LAST_LENGTH = 43;
+
+const validateTokenStructure = (token: string) => {
+  const parts = token.split(".");
+
+  if (parts.length !== 3) return false;
+
+  const [first, middle, last] = parts;
+
+  if (first.length !== FIRST_LENGTH) return false;
+  if (last.length !== LAST_LENGTH) return false;
+  if (!middle || middle.length < 10) return false;
+
+  return true;
+};
+
 /* ===================== PROVIDER ===================== */
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
@@ -63,13 +84,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
+  /* ===================== API SPAM GUARD ===================== */
+
+  const requestTimestamps: number[] = [];
+
   /* ===================== CLEAR AUTH ===================== */
 
   const clearAuth = () => {
+    const theme = localStorage.getItem("theme");
 
-    // 🔥 FULL STORAGE CLEAN (secure logout)
-    const theme = localStorage.getItem("theme"); // keep theme if needed
     localStorage.clear();
+
     if (theme) localStorage.setItem("theme", theme);
 
     setUser(null);
@@ -84,6 +109,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const storedToken = localStorage.getItem("access_token");
 
       if (!storedToken) {
+        setLoading(false);
+        return;
+      }
+
+      // 🔥 token structure check
+      if (!validateTokenStructure(storedToken)) {
+        clearAuth();
         setLoading(false);
         return;
       }
@@ -112,20 +144,23 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     checkAuth();
   }, []);
 
-  /* ===================== TOKEN WATCHER (ANTI-TAMPER) ===================== */
+  /* ===================== STORAGE LISTENER (NO POLLING) ===================== */
 
   useEffect(() => {
-    const interval = setInterval(async () => {
+    const handleStorage = async () => {
       const storedToken = localStorage.getItem("access_token");
 
-      // removed manually
-      if (!storedToken && user) {
+      if (!storedToken) {
         clearAuth();
         return;
       }
 
-      // changed manually
-      if (storedToken && storedToken !== token) {
+      if (!validateTokenStructure(storedToken)) {
+        clearAuth();
+        return;
+      }
+
+      if (storedToken !== token) {
         try {
           const res = await axios.get(`${APIURL}/auth_me`, {
             headers: { Authorization: `Bearer ${storedToken}` },
@@ -141,10 +176,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           clearAuth();
         }
       }
-    }, 2000); // check every 2 sec
+    };
 
-    return () => clearInterval(interval);
-  }, [token, user]);
+    window.addEventListener("storage", handleStorage);
+    return () => window.removeEventListener("storage", handleStorage);
+  }, [token]);
 
   /* ===================== LOGIN ===================== */
 
@@ -159,6 +195,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       });
 
       if (res.data.token && res.data.user) {
+        // 🔥 TOKEN STRUCTURE CHECK
+        if (!validateTokenStructure(res.data.token)) {
+          setError("Invalid token format");
+          return false;
+        }
+
         localStorage.setItem("access_token", res.data.token);
         localStorage.setItem("user", JSON.stringify(res.data.user));
 
@@ -201,6 +243,23 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     const reqInterceptor = axios.interceptors.request.use((config) => {
+      const now = Date.now();
+
+      requestTimestamps.push(now);
+
+      while (
+        requestTimestamps.length &&
+        now - requestTimestamps[0] > 1000
+      ) {
+        requestTimestamps.shift();
+      }
+
+      // 🔥 SPAM PROTECTION
+      if (requestTimestamps.length >= 10) {
+        setError("⚠️ I am not a robot — Too many requests detected.");
+        return Promise.reject("Too many requests");
+      }
+
       const accessToken = localStorage.getItem("access_token");
 
       if (accessToken && !config.headers.Authorization) {
