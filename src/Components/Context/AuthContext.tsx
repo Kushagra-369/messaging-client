@@ -107,11 +107,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     const checkAuth = async () => {
       const storedToken = localStorage.getItem("access_token");
+    
 
       if (!storedToken) {
         setLoading(false);
         return;
-      }
+      } 
 
       // 🔥 token structure check
       if (!validateTokenStructure(storedToken)) {
