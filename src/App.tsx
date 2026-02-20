@@ -1,6 +1,6 @@
 import { Route, Routes, Navigate } from "react-router-dom";
 import { useAuth } from "./Components/Context/AuthContext";
-
+import React from "react";
 import SignUp from "./Components/FirstSign/FirstSignin";
 import Signin from "./Components/FirstSign/Signin";
 import ThemeToggle from "./Components/ThemeToggle";
@@ -8,12 +8,25 @@ import Otp from "./Components/FirstSign/Otp";
 import Forgot_Password from "./Components/Forgot_password/Forgot_Password";
 import Home from "./Components/Home/Home";
 import Navbar from "./Components/Navbar/Navbar";
-
 export default function App() {
 
-  const { user, loading } = useAuth();
 
-  if (loading) return null; // or loader
+
+  const { user, loading } = useAuth();
+  React.useEffect(() => {
+    if (!loading) {
+      window.dispatchEvent(new Event("app-ready"));
+    }
+  }, [loading]);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen text-white text-xl">
+        Loading ChatApp...
+      </div>
+    );
+  }
+
 
   return (
     <div className="relative min-h-screen">

@@ -155,23 +155,16 @@
 
   <!-- Remove loading screen when app loads -->
   <script>
-    // Remove loading screen when app mounts
-    document.addEventListener('DOMContentLoaded', () => {
-      const root = document.getElementById('root');
-      const loading = document.getElementById('loading');
+    window.addEventListener("app-ready", () => {
+      const loading = document.getElementById("loading");
+      if (!loading) return;
 
-      // Check if React has mounted
-      const checkMounted = setInterval(() => {
-        if (root.children.length > 0) {
-          clearInterval(checkMounted);
-          // Add fade-out animation
-          loading.style.opacity = '0';
-          loading.style.transition = 'opacity 0.3s ease';
-          setTimeout(() => {
-            loading.style.display = 'none';
-          }, 300);
-        }
-      }, 100);
+      loading.style.opacity = "0";
+      loading.style.transition = "opacity .3s ease";
+
+      setTimeout(() => {
+        loading.remove();
+      }, 300);
     });
   </script>
 

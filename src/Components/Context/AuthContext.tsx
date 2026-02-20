@@ -50,9 +50,9 @@ export const AuthContext = createContext<AuthContextType>({
   loading: true,
   error: null,
   login: async () => false,
-  logout: () => {},
-  updateUser: () => {},
-  clearError: () => {},
+  logout: () => { },
+  updateUser: () => { },
+  clearError: () => { },
 });
 
 /* ===================== TOKEN VALIDATOR ===================== */
@@ -272,9 +272,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const resInterceptor = axios.interceptors.response.use(
       (res) => res,
       (err) => {
+
+        /* 🔥 ROBOT CHECK HANDLER */
+        if (err.response?.data?.type === "ROBOT_CHECK") {
+          window.location.href = "/robot-check";
+          return Promise.reject(err);
+        }
+
+        /* 🔐 AUTH FAIL */
         if (err.response?.status === 401) {
           clearAuth();
         }
+
         return Promise.reject(err);
       }
     );
