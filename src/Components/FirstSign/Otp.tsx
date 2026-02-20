@@ -12,12 +12,15 @@ export default function Otp() {
 
   // 🔹 Get email saved during signup
   useEffect(() => {
+    const storedUserId = localStorage.getItem("otp_userId");
     const storedEmail = localStorage.getItem("otp_email");
-    if (!storedEmail) {
+
+    if (!storedUserId || !storedEmail) {
       navigate("/");
       return;
     }
-    setEmail(storedEmail);
+
+    setEmail(storedEmail);   // ✅ email show karna hai
   }, [navigate]);
 
   /* =======================
@@ -44,6 +47,7 @@ export default function Otp() {
 
       const res = await fetch(`${APIURL}/verify_otp/${userId}`, {
         method: "POST",
+        credentials: "include",   // 🔥 ADD
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           otp: Number(otp), // 👈 IMPORTANT (backend number expect karta)
@@ -62,8 +66,7 @@ export default function Otp() {
       localStorage.removeItem("otp_userId");
 
       alert("OTP Verified Successfully!");
-      navigate("/login");
-
+      navigate("/login", { replace: true });
     } catch (err) {
       console.error(err);
       alert("Something went wrong");
@@ -89,6 +92,7 @@ export default function Otp() {
 
       const res = await fetch(`${APIURL}/resend_otp/${userId}`, {
         method: "POST",
+        credentials: "include",
       });
 
       const data = await res.json();

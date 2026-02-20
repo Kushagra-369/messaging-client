@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { APIURL } from "../../GlobalAPIURL";
 import { FaLock, FaCheckCircle, FaEye, FaEyeSlash } from "react-icons/fa";
@@ -11,8 +11,20 @@ export default function Forgot_Password() {
   const [searchParams] = useSearchParams();
   const token = searchParams.get("token");
 
-  console.log("RESET TOKEN =", token);
+  useEffect(() => {
+    if (!token) {
+      navigate("/login", { replace: true });
+    }
+  }, [token, navigate]);
 
+  if (!token) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        Invalid or expired reset link.
+      </div>
+    );
+  }
+  
   const [formData, setFormData] = useState({
     new_password: "",
     confirm_password: "",
@@ -70,6 +82,7 @@ export default function Forgot_Password() {
         `${APIURL}/forgotten_update_password/${token}`,
         {
           method: "POST",
+          credentials: "include",   // 🔥 IMPORTANT
           body: form,
         }
       );

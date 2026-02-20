@@ -81,16 +81,10 @@ export default function Navbar() {
     try {
 
       // OPTIONAL backend logout
-      const token = localStorage.getItem("access_token");
-
-      if (token) {
-        await fetch(`${APIURL}/logout`, {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }).catch(() => { });
-      }
+      await fetch(`${APIURL}/logout`, {
+        method: "POST",
+        credentials: "include", // 🔥 COOKIE SEND
+      }).catch(() => { });
 
       // 🔥 REAL LOGOUT
       logout();
@@ -101,6 +95,8 @@ export default function Navbar() {
 
     } catch (err) {
       logout();
+      setIsProfileOpen(false);
+      setShowConfirmLogout(false);
       navigate("/login");
     } finally {
       setIsSigningOut(false);

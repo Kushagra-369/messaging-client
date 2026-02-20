@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { APIURL } from "../../GlobalAPIURL";
 import { FaGithub, FaGoogle, FaEnvelope, FaLock, FaArrowRight, FaCheckCircle, FaChevronDown, FaChevronUp } from "react-icons/fa";
 import { motion, AnimatePresence } from "framer-motion";
@@ -156,52 +156,19 @@ export default function SignUp() {
   const [error, setError] = useState("");
 
   // Animation and expansion states
-  const [showContent, setShowContent] = useState(false);
-  const [isExpanded, setIsExpanded] = useState(false);
+  const showContent = true;
+  const isExpanded = true;
   const [showDetails, setShowDetails] = useState(false);
-  const [params] = useSearchParams();
 
 
   useEffect(() => {
-    setShowContent(true);
-    // Auto-show expand button after icons appear
-    const timer = setTimeout(() => {
-      setIsExpanded(true);
-    }, 2000);
-    return () => clearTimeout(timer);
+    const reset = setTimeout(() => {
+      setSocialLoading({ google: false, github: false });
+    }, 8000);
+
+    return () => clearTimeout(reset);
   }, []);
 
-  // ✅ Google/Github token detect
-  useEffect(() => {
-    const token = params.get("token");
-
-    const fetchUser = async () => {
-      try {
-        if (!token) return;
-
-        localStorage.setItem("token", token);
-
-        const res = await fetch(`${APIURL}/auth_me`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-
-        const data = await res.json();
-
-        if (res.ok && data.user) {
-          localStorage.setItem("user", JSON.stringify(data.user));
-        }
-
-        navigate("/");
-      } catch (err) {
-        console.log(err);
-        navigate("/");
-      }
-    };
-
-    fetchUser();
-  }, []);
 
 
 
@@ -229,6 +196,7 @@ export default function SignUp() {
 
       const res = await fetch(`${APIURL}/user_login`, {
         method: "POST",
+        credentials: "include",   // 🔥 MOST IMPORTANT
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
       });
@@ -236,12 +204,10 @@ export default function SignUp() {
       const data = await res.json();
 
       if (res.ok) {
-        localStorage.setItem("token", data.token);
-        localStorage.setItem("user", JSON.stringify(data.user));
-
         setDone(true);
+
         setTimeout(() => {
-          navigate("/home");
+          navigate("/home", { replace: true });
         }, 2000);
       } else {
         setError(data.message || "Login failed. Please check your credentials.");
@@ -269,6 +235,7 @@ export default function SignUp() {
 
       const res = await fetch(`${APIURL}/forgot_password_gmail`, {
         method: "POST",
+        credentials: "include",
         body: form,
       });
 

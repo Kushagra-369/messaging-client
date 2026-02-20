@@ -1,10 +1,9 @@
-import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { APIURL } from "../../GlobalAPIURL";
 import { FaGithub, FaGoogle, FaArrowRight, FaEnvelope, FaUser, FaPhone, FaLock, FaChevronDown, FaChevronUp } from "react-icons/fa";
 import { motion, AnimatePresence } from "framer-motion";
 import icon from "../../assets/images/icon.png"
-import { useAuth } from "../Context/AuthContext";
 
 // Available country codes from schema
 const COUNTRY_CODES = ['+1', '+44', '+91', '+92', '+971'];
@@ -149,8 +148,6 @@ export default function Signin() {
   const navigate = useNavigate();
   const [isExpanded, setIsExpanded] = useState(false);
   const [showDetails, setShowDetails] = useState(false);
-  const [params] = useSearchParams();
-  const { } = useAuth();
 
   const [formData, setFormData] = useState({
     username: "",
@@ -174,40 +171,6 @@ export default function Signin() {
       setIsExpanded(true);
     }, 2000);
     return () => clearTimeout(timer);
-  }, []);
-  // ✅ Google/Github login token detect
-  useEffect(() => {
-    const token = params.get("token");
-
-    if (!token) return;
-
-    const fetchUser = async () => {
-      try {
-        // IMPORTANT — same key as AuthContext
-        localStorage.setItem("access_token", token);
-
-        const res = await fetch(`${APIURL}/auth_me`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-
-        const data = await res.json();
-
-        if (res.ok && data.user) {
-          localStorage.setItem("user", JSON.stringify(data.user));
-
-          // 🔥 FORCE RELOAD SO AUTHCONTEXT RE-RUNS
-          window.location.href = "/";
-        }
-
-      } catch (err) {
-        console.log(err);
-        navigate("/login");
-      }
-    };
-
-    fetchUser();
   }, []);
 
 
@@ -243,6 +206,7 @@ export default function Signin() {
 
       const res = await fetch(`${APIURL}/create_user`, {
         method: "POST",
+          credentials: "include",   // 🔥 ADD THIS
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           username,
@@ -571,7 +535,7 @@ export default function Signin() {
             transition={{ delay: 0.8, duration: 0.6 }}
           >
             Already have an account?{" "}
-            <Link to="/login" className="text-blue-600 hover:underline font-medium">
+            <Link to="/signup" className="text-blue-600 hover:underline font-medium">
               Login
             </Link>
           </motion.p>
