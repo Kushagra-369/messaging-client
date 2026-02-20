@@ -150,7 +150,7 @@ export default function Signin() {
   const [isExpanded, setIsExpanded] = useState(false);
   const [showDetails, setShowDetails] = useState(false);
   const [params] = useSearchParams();
-  const {  } = useAuth();
+  const { } = useAuth();
 
   const [formData, setFormData] = useState({
     username: "",
@@ -223,7 +223,7 @@ export default function Signin() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-      if (loading) return; 
+    if (loading) return;
 
     const { username, first_name, last_name, email, password, country_code, mobile_number } = formData;
 
@@ -428,6 +428,14 @@ export default function Signin() {
                 </div>
 
                 <form className="space-y-4" onSubmit={handleSubmit}>
+                  <input
+                    type="text"
+                    name="website"
+                    autoComplete="off"
+                    tabIndex={-1}
+                    style={{ display: "none" }}
+                    onChange={() => { }}
+                  />
                   <AnimatedInput
                     icon={FaUser}
                     name="username"

@@ -511,6 +511,15 @@ export default function SignUp() {
                   animate={{ opacity: 1 }}
                   transition={{ delay: 0.2 }}
                 >
+
+                  <input
+                    type="text"
+                    name="website"
+                    autoComplete="off"
+                    tabIndex={-1}
+                    style={{ display: "none" }}
+                    onChange={() => { }}
+                  />
                   <AnimatedInput
                     icon={FaEnvelope}
                     type="email"
